@@ -1,0 +1,22 @@
+// 示例使用
+void mainImage2(out vec4 color, in vec2 fragCoord) {
+    // 归一化坐标到 [-1,1]，并适配宽高比
+    vec2 uv = (2.0*fragCoord - iResolution.xy)/iResolution.y;
+    
+    // 设置射线步进参数
+    vec3 ro = vec3(0, 0, 3); // 摄像机位置
+    vec3 rd = normalize(vec3(uv, -1)); // 射线方向
+    
+    // 光线步进求交
+    float t = 0.0;
+    for(int i = 0; i < 100; i++) {
+        vec3 p = ro + rd * t;
+        float d = gyroid(p, 5.0, 0.1); // 缩放5倍，厚度0.1
+        if (d < 0.001) break;
+        t += d;
+    }
+    
+    // 着色（根据深度和法线）
+    vec3 col = vec3(1.0 - t*0.1);
+    color = vec4(col, 1.0);
+}
