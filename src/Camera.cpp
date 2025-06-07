@@ -178,7 +178,7 @@ glm::mat4 Camera::getView() {
 glm::mat4 Camera::getProjection(GLFWwindow* window) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    return glm::perspective(glm::radians(m_fov), 1.0f * width / height, 0.1f, 100.f);
+    return glm::perspective(glm::radians(m_fov), 1.0f * width / height, 0.1f, 1000.f);
 }
 
 glm::vec3 Camera::getPosition() const {

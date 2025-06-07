@@ -16,7 +16,7 @@ Background::Background(const std::string& vertexCode, const std::string& fragmen
 
 	m_idxBufferPtr = new IndexBuffer(m_index, sizeof(m_index) / sizeof(m_index[0]));
 	
-	m_vertArrayPtr = new VertexArray(*m_vertBufferPtr, *m_idxBufferPtr);
+	m_vertArrayPtr = new VertexArray(m_vertBufferPtr, m_idxBufferPtr);
 	if (!m_vertArrayPtr) {
 		std::cout << "background m_vertArrayPtr create failed\n";
 		exit(-1);

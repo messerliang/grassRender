@@ -44,9 +44,13 @@ public:
 
 	// 添加数据
 	void addData(const void* data, unsigned int dataSize);
+	// 更新 vertex buffer 中的数据
+	void updateData(const void* data, unsigned int dataSize);
+
 
 	void Bind() const;
 	void Unbind() const;
+	// vertexbuffer 中的数据的排布
 	const std::vector<LayoutElement>& GetLayout() const;
 	unsigned int GetStride() const;
 	unsigned int getVertexNum() const;

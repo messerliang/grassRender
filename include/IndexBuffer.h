@@ -9,14 +9,13 @@
 class IndexBuffer
 {
 private:
-	unsigned int m_id;
-	unsigned int m_count;
+	unsigned int m_id=0;
+	unsigned int m_count=0;
 public:
 	//
 	// 参数1：index 数组
 	// 参数2：数组包含多少个元素
 	//
-
 	IndexBuffer(const unsigned int* index, unsigned int count);
 	IndexBuffer();
 	~IndexBuffer();
@@ -24,6 +23,10 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
+	// 返回 IndexArray 有多少个下标元素
 	unsigned int GetCount() const;
+
+	// 更新 Index 数组
+	void updatteData(const unsigned int* index, unsigned int count);
 };
 

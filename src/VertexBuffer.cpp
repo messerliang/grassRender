@@ -15,8 +15,28 @@ void VertexBuffer::addData(const void* data, unsigned int dataSize) {
     }
     GLCall(glGenBuffers(1, &m_id));
     m_dataSize = dataSize;
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, m_id));
+    this->Bind();
     GLCall(glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW));
+
+}
+
+void VertexBuffer::updateData(const void* data, unsigned int dataSize) {
+    if (!m_dataSize) {
+        std::cout << "current buffer have not been created\n";
+        exit(-1);
+    }
+    else {
+        this->Bind();
+        // 需要分配更大的缓冲区
+        if (dataSize > m_dataSize) {
+            glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
+        }
+        else {
+            GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data));
+        }
+        m_dataSize = dataSize;
+        
+    }
 
 }
 

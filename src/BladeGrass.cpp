@@ -1,7 +1,7 @@
 #include "BladeGrass.h"
 
-BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float height):
-	m_basicAttrib({pos, width, height})
+BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float height, int numOfSeg, float w, float l):
+	m_basicAttrib({pos, width, height}), m_numOfSegment(numOfSeg), m_groundWidth(w), m_groundLength(l)
 {
     genPoints(m_basicAttrib);
     // 各个 instance
@@ -18,7 +18,7 @@ BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float heig
     // 为属性偏移生成数据
     m_offsetVertBufferPtr = new VertexBuffer(m_instancePosOffset.data(), m_instancePosOffset.size() * sizeof(m_instancePosOffset[0]));
     checkPointer(m_offsetVertBufferPtr, "BladeGrass posOffset VB create failed\n");
-    m_offsetVertBufferPtr->Push<float>(3);  // 位置偏移
+    m_offsetVertBufferPtr->Push<float>(3);  // 一个草方格内的位置偏移
     m_offsetVertBufferPtr->Push<float>(1);  // 旋转
     m_offsetVertBufferPtr->Push<float>(1);  // 高度缩放因子
     m_offsetVertBufferPtr->Push<float>(1);  // 缩放后的最大高度
@@ -33,9 +33,9 @@ BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float heig
 
 
     // 生成 vertexArray
-    m_vertArrayPtr = new VertexArray(*m_vertBufferPtr, *m_idxBufferPtr);
+    m_vertArrayPtr = new VertexArray(m_vertBufferPtr, m_idxBufferPtr);
     checkPointer(m_vertArrayPtr, "BladeGrass VA create failed\n");
-    m_vertArrayPtr->AddBuffer(*m_offsetVertBufferPtr, true);
+    m_vertArrayPtr->AddBuffer(m_offsetVertBufferPtr, true);
 }
 
 BladeGrass::~BladeGrass() {
@@ -54,48 +54,51 @@ BladeGrass::~BladeGrass() {
 }
 
 void BladeGrass::genPoints(GrassAttribute& grassAttrib, uint32_t offset) {
-
+    m_positions.clear();
+    m_index.clear();
     float halfWidth = grassAttrib.width / 2;
-   
-    // 
-    float offsetX = halfWidth;
-    float offsetY = grassAttrib.height / 7;
+    
+    float numOfVertices = 2 * m_numOfSegment + 1;
+
     std::vector<uint32_t> firstSegIdx = { 0, 1, 2, 1, 2, 3 };
 
-    // 15 个顶点
-    for (int i = 0; i < 8; i++) {
-        float heightPercent = i / 7.0;
+    //  个顶点
+    for (int i = 0; i < m_numOfSegment+1; i++) {
+        float heightPercent = i / m_numOfSegment;
         float x = (1 - heightPercent) * halfWidth;
-        float h = std::pow(heightPercent, 0.5) * grassAttrib.height;
-        if (7  ==  i) {
+        float h = heightPercent * grassAttrib.height;
+        if (m_numOfSegment  ==  i) {
             m_positions.insert(m_positions.end(), 
                 { grassAttrib.position.x, grassAttrib.position.y + grassAttrib.height, grassAttrib.position.z });
             
             continue;
         }
-        //else if (6 == i) {
-        //    halfWidth = halfWidth * 0.6667f;
-        //}
+
         m_positions.insert(m_positions.end(),{ grassAttrib.position.x - x, grassAttrib.position.y + h, grassAttrib.position.z});
         m_positions.insert(m_positions.end(),{ grassAttrib.position.x + x, grassAttrib.position.y + h, grassAttrib.position.z});
 
 
     }
-    // 插入顶点索引，一共 13 个三角形， 
-    for (int i = 0; i < 7; ++i) {
-        if (i < 6) {
+    // 插入顶点索引 
+    for (int i = 0; i < m_numOfSegment; ++i) {
+        if (i < m_numOfSegment-1) {
             for (auto& id : firstSegIdx) {
-                m_index.push_back(i * 2 + id + 15 * offset);
+                m_index.push_back(i * 2 + id + numOfVertices * offset);
             }
         }
         else {
             for (int j = 0; j < 3; ++j) {
-                m_index.push_back(2 * i + firstSegIdx[j] + 15 * offset);
+                m_index.push_back(2 * i + firstSegIdx[j] + numOfVertices * offset);
             }
         }
     }
+}
 
-    
+void BladeGrass::updateSegment(int numOfSeg) {
+    m_numOfSegment = numOfSeg;
+    genPoints(m_basicAttrib);
+    m_vertBufferPtr->updateData(m_positions.data(), m_positions.size() * sizeof(m_positions[0]));
+    m_idxBufferPtr->updatteData(m_index.data(), m_index.size());
 }
 
 

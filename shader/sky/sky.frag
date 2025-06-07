@@ -131,7 +131,7 @@ void main() {
     vec2 uv = fragCoord * 0.5 + 0.5;
     float n = fbm(uv + movement);
 
-    vec3 skyColor = vec3(0.5, 0.75, 1.0); // Ìì¿ÕÀ¶
+    vec3 skyColor = vec3(0.4, 0.75, 1.0); // Ìì¿ÕÀ¶
     vec3 cloudColor = vec3(1.0);          // °×ÔÆ
      // ²åÖµ
     vec3 color = mix(skyColor, cloudColor, smoothstep(0.5, 0.8, n));

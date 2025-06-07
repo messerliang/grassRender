@@ -25,7 +25,7 @@ int main() {
 
 
 	// 创建窗口
-	GLFWwindow* window = glfwCreateWindow(800, 600, "light scene", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "grass scene", nullptr, nullptr);
 	if (!window) {
 		std::cerr << "window create failed\n";
 		glfwTerminate();
@@ -46,25 +46,49 @@ int main() {
 	}
 
 
-
-
 	// 先准备一个背景
 	Background* sky = new Background("shader/sky/sky.vert", "shader/sky/sky.frag");
 
+
+
+	Shader* bgShader = new Shader("shader/background/bg.vert", "shader/background/bg.frag");
+	Shader* grassShaderPtr = new Shader("shader/grass.vert", "shader/grass.frag");
+
+	BladeGrass* grassPtr = new BladeGrass(glm::vec3(0.0f, 0.0f, 0.0f), 0.2f, 1.5f, 10);
+	std::vector<BladeGrass*> grasses;
+	std::vector<glm::vec3> grassTilePosition;
+	float grassTileWidth = 10.0f, grassTileLength = 10.0f;
+	int N = 5;
+	for (int i = 0; i < N*N; ++i) {
+		glm::vec3 offset(((i % N) - N / 2) * grassTileWidth, 0.0f, ((i / N) - N / 2) * grassTileLength);
+		float distance = glm::distance(camera.getPosition(), offset);
+		grassTilePosition.emplace_back(offset);
+
+
+		BladeGrass* grass = new BladeGrass(glm::vec3(0.0f), 0.2f, 2.0f, 10, grassTileWidth, grassTileLength);
+		grasses.push_back(grass);
+		
+		
+		
+		std::cout << distance <<"," << offset.x << " " << offset.z << std::endl;
+	}
+	
 	// 草地
+	float groundWidth = 100.0f / 2.0f;
+	float groundLength = 100.0f / 2.0f;
 	float ground[] = {
 		// positions          // normals           // texture coords
-		 10.0f,  0.0f, 10.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 10.0f,  0.0f,-10.0f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		-10.0f,  0.0f,-10.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-10.0f,  0.0f, 10.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		
+		 groundWidth,  0.0f, groundLength,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		 groundWidth,  0.0f,-groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		-groundWidth,  0.0f,-groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-groundWidth,  0.0f, groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+
 	};
 	unsigned int groundIdx[] = {
 		0, 1, 2,
 		0, 2, 3,
 	};
-	
+
 	VertexBuffer* vbPtr = new VertexBuffer(ground, sizeof(ground));
 	vbPtr->Push<float>(3, false);
 	vbPtr->Push<float>(3, false);
@@ -72,12 +96,11 @@ int main() {
 
 	IndexBuffer* ibPtr = new IndexBuffer(groundIdx, sizeof(groundIdx) / sizeof(groundIdx[0]));
 
-	VertexArray* vaPtr = new VertexArray(*vbPtr, *ibPtr);
+	VertexArray* vaPtr = new VertexArray(vbPtr, ibPtr);
 
-	Shader* bgShader = new Shader("shader/background/bg.vert", "shader/background/bg.frag");
-	Shader* grassShaderPtr = new Shader("shader/grass.vert", "shader/grass.frag");
+	// 风的方向
+	glm::vec3 windDir(0.0f, 0.0f, 1.0f);
 
-	BladeGrass* grassPtr = new BladeGrass(glm::vec3(0.0f, 0.0f, 0.0f), 0.2f, 2.0f);
 	// model、view、projection三件套
 	glm::mat4 model(1.0f);
 	glm::mat4 view = camera.getView();
@@ -109,12 +132,32 @@ int main() {
 		vaPtr->DrawElement(*bgShader);
 		
 		// 绘制草
+		glm::vec3 camPos = camera.getPosition();
 		grassShaderPtr->Use();
 		grassShaderPtr->SetUniform1f(glfwGetTime(), "iTime");
-		grassShaderPtr->SetUniform1f(grassPtr->m_groundWidth, "grassWidth");
-		grassShaderPtr->SetUniform1f(grassPtr->m_groundLength, "grassLength");
-
-		grassPtr->displayInstances(*grassShaderPtr, camera, window);
+		grassShaderPtr->SetUniformV3(windDir, "windDir");
+		grassShaderPtr->SetUniform1f(grassPtr->m_groundWidth*N, "grassWidth");
+		grassShaderPtr->SetUniform1f(grassPtr->m_groundLength*N, "grassLength");
+		int numOfSeg = 20;
+		for (int i = 0; i < N * N; i++) {
+			glm::vec3 tilePos = grassTilePosition[i];
+			
+			float distance = glm::distance(tilePos, camPos);
+			if (distance > 100) {
+				numOfSeg = 1;
+			}
+			else if(distance < 10){
+				numOfSeg = 15;
+			}
+			else {
+				numOfSeg = (110 - distance) / 90 * 10;
+			}
+			//std::cout<< i << ": distance: " << distance << ", seg: " << numOfSeg << "\n";
+			grassShaderPtr->SetUniformV3(grassTilePosition[i], "grassTilePosition");
+			grasses[i]->updateSegment(numOfSeg);
+			grasses[i]->displayInstances(*grassShaderPtr, camera, window);
+		}
+		//grassPtr->displayInstances(*grassShaderPtr, camera, window);
 
 
 		glfwSwapBuffers(window);

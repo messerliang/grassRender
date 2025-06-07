@@ -2,15 +2,15 @@
 
 layout (location = 0) in vec4 position;
 
-layout (location = 1) in vec4 positionOffset;
-layout (location = 2) in float angle;
-layout (location = 3) in float heightScale;
-layout (location = 4) in float maxHeight;
+layout (location = 1) in vec4 positionOffset;           // 当前实例偏移中心的距离
+layout (location = 2) in float angle;                   // 旋转矩阵，生成不同方向的草
+layout (location = 3) in float heightScale;             // 高度随机因子，在不同实例中生成不同高度的草
+layout (location = 4) in float maxHeight;               // 当前实例的最大高度
 
-layout (location = 5) in vec4 cubicBezierP1;
+layout (location = 5) in vec4 cubicBezierP1;            // 草的弯曲，cubic bezier curve
 layout (location = 6) in vec4 cubicBezierP2;
 layout (location = 7) in vec4 cubicBezierP3;
-layout (location = 8) in vec4 randDir;
+layout (location = 8) in vec4 randDir;                  // 
 
 uniform mat4 model;
 uniform mat4 view;
@@ -19,6 +19,8 @@ uniform mat4 projection;
 uniform float iTime;
 uniform float grassWidth;
 uniform float grassLength;
+uniform vec3 windDir;                                   // 风的方向
+uniform vec3 grassTilePosition;                         // 当前草块的位置
 
 out float heightPercent;
 
@@ -119,23 +121,23 @@ void main() {
 
 
     // 加一些随机抖动，在没有风情况下的随机抖动
-    float offset = maxHeight * 0.2 * noise(positionOffset.xz + iTime * 0.05);
+    float offset = maxHeight * 0.1 * noise(positionOffset.xz + iTime * 0.05);   // 精致情况下的随机抖动幅度
 
-    vec4 displaced =  vec4(0.0f, 0.0f, 1.0f, 0.0f) * offset * heightPercent;
+    vec4 displaced =  normalize(randDir) * offset * heightPercent;              // 往某个方向随机抖动
 
     // 草的随机转向
     vec4 afterRotate = rotate * (instancePos + displaced);
 
     // 风吹带来的转向
-    vec2 uniformUv = vec2(positionOffset.x / grassWidth, positionOffset.z / grassLength);
+    vec2 uniformUv = vec2((positionOffset.x + grassTilePosition.x) / grassWidth, (positionOffset.z + grassTilePosition.z) / grassLength);
     float bendStrenngth = pow(heightPercent, 0.5);
-    mat4 windRotateMat = rotationMatrix(vec3(1.0f, 0.0, 0.0), 3.14 * 0.5 * noise(uniformUv + 0.06*iTime, 16) * bendStrenngth );
+    mat4 windRotateMat = rotationMatrix(normalize(windDir), 3.14 * 0.5 * noise(uniformUv + 0.06*iTime, 16) * bendStrenngth );
     vec4 afterWind =  windRotateMat*afterRotate;
 
     // 添加地面高度起伏
     float bump = 10.0f * noise(uniformUv, 4);
     vec4 bumpV4 = vec4(0.0f, bump, 0.0f, 0.0f);
     
-    gl_Position = projection * view * model * (afterWind  +  positionOffset + bumpV4);
+    gl_Position = projection * view * model * (afterWind  +  positionOffset + bumpV4 + vec4(grassTilePosition.xyz, 0.0f));
     
 }

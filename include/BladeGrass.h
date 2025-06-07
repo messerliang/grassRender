@@ -51,21 +51,23 @@ private:
 
 
 	// instance 数据，每个草相对于基本属性的偏移
-	uint32_t m_numOfInstanceX = 800;			// 横轴上草的数量
-	uint32_t m_numOfInstanceY = 800;			// 纵轴上草的数量
+	uint32_t m_numOfInstanceX = 20;			// 横轴上草的数量
+	uint32_t m_numOfInstanceY = 20;			// 纵轴上草的数量
 	std::vector<OffsetData> m_instancePosOffset;
 	VertexBuffer* m_offsetVertBufferPtr = NULL;	// 基本顶点
 
 public:
+	// 
+	float m_numOfSegment=10;						// 草的段数，从 1~ 7
 	// 草地的长和宽
-	float m_groundWidth = 300.0f;					// 草地的宽
-	float m_groundLength = 300.0f;					// 草地的长
+	float m_groundWidth = 3.0f;						// 草地的宽
+	float m_groundLength = 3.0f;					// 草地的长
 
-	BladeGrass(const glm::vec3& pos, const float width, const float height);
+	BladeGrass(const glm::vec3& pos, const float width, const float height, int numOfSeg=10, float w=5.0f, float l=5.0f);
 
 	~BladeGrass();
 
-	// 根据位置、宽度和高度生成对应的点，为第 offset 个bladegrass按照15个顶点的方式生成对应的顶点，
+	// 根据位置、宽度和高度生成对应的点，为第 offset 个bladegrass按照对应顶点的方式生成对应的顶点，
 	void genPoints(GrassAttribute& grassAttrib, uint32_t offset=0);
 	
 	// 生成位置偏移
@@ -80,6 +82,9 @@ public:
 
 	// 返回 instances 的数量
 	int getInstancesNum() const;
+	
+	// 修改 LOD 时候，重新计算 vertex buffer 和 index buffer
+	void updateSegment(int numOfSeg);
 
 	Point cubicBezier(float t, const Point& p0, const Point& p1, const Point& p2, const Point& p3);
 	
