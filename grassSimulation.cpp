@@ -11,6 +11,20 @@
 #include "Background.h"
 #include "BladeGrass.h"
 
+// 根据距离，生成对应的 lod
+int getLOD(float distance, int tileWidth) {
+	float normDistance = distance / tileWidth;
+	if (normDistance >= 20) {
+		return 1;
+	}
+	else if (normDistance < 2) {
+		return 15;
+	}
+	else {
+		int result = 20 - normDistance;
+		return (result < 15) ? result : 15;
+	}
+}
 
 int main() {
 	std::cout << "grassSimulation\n";
@@ -57,25 +71,25 @@ int main() {
 	BladeGrass* grassPtr = new BladeGrass(glm::vec3(0.0f, 0.0f, 0.0f), 0.2f, 1.5f, 10);
 	std::vector<BladeGrass*> grasses;
 	std::vector<glm::vec3> grassTilePosition;
-	float grassTileWidth = 10.0f, grassTileLength = 10.0f;
-	int N = 5;
+	float grassTileWidth = 5.0f, grassTileLength = 5.0f;
+	int N = 50;
 	for (int i = 0; i < N*N; ++i) {
 		glm::vec3 offset(((i % N) - N / 2) * grassTileWidth, 0.0f, ((i / N) - N / 2) * grassTileLength);
 		float distance = glm::distance(camera.getPosition(), offset);
 		grassTilePosition.emplace_back(offset);
+		int lod = getLOD(distance, grassTileWidth);
 
-
-		BladeGrass* grass = new BladeGrass(glm::vec3(0.0f), 0.2f, 2.0f, 10, grassTileWidth, grassTileLength);
+		BladeGrass* grass = new BladeGrass(glm::vec3(0.0f), 0.2f, 2.0f, lod, grassTileWidth, grassTileLength);
 		grasses.push_back(grass);
 		
 		
 		
-		std::cout << distance <<"," << offset.x << " " << offset.z << std::endl;
+		//std::cout << distance <<", lod: "<< lod <<", " << offset.x << " " << offset.z << std::endl;
 	}
 	
 	// 草地
-	float groundWidth = 100.0f / 2.0f;
-	float groundLength = 100.0f / 2.0f;
+	float groundWidth = N * grassTileWidth / 2;
+	float groundLength = N * grassTileLength / 2;
 	float ground[] = {
 		// positions          // normals           // texture coords
 		 groundWidth,  0.0f, groundLength,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -142,16 +156,8 @@ int main() {
 		for (int i = 0; i < N * N; i++) {
 			glm::vec3 tilePos = grassTilePosition[i];
 			
-			float distance = glm::distance(tilePos, camPos);
-			if (distance > 100) {
-				numOfSeg = 1;
-			}
-			else if(distance < 10){
-				numOfSeg = 15;
-			}
-			else {
-				numOfSeg = (110 - distance) / 90 * 10;
-			}
+			float distance = glm::distance(tilePos, glm::vec3(camPos.x, 0.0f, camPos.z));
+			numOfSeg = getLOD(distance, grassTileWidth);
 			//std::cout<< i << ": distance: " << distance << ", seg: " << numOfSeg << "\n";
 			grassShaderPtr->SetUniformV3(grassTilePosition[i], "grassTilePosition");
 			grasses[i]->updateSegment(numOfSeg);
