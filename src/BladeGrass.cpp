@@ -3,12 +3,35 @@
 BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float height, int numOfSeg, float w, float l):
 	m_basicAttrib({pos, width, height}), m_numOfSegment(numOfSeg), m_groundWidth(w), m_groundLength(l)
 {
+    initialize();
+}
+
+BladeGrass::BladeGrass(float width, float height, int numWidth, int numLength, int numOfSeg, float w, float l) :
+    m_basicAttrib({glm::vec3(0.0), width, height}), m_numOfInstanceX(numWidth), m_numOfInstanceY(numLength), m_numOfSegment(numOfSeg), m_groundWidth(w), m_groundLength(l)
+{
+    initialize();
+}
+
+BladeGrass::~BladeGrass() {
+    if (m_idxBufferPtr) {
+        delete(m_idxBufferPtr);
+        m_idxBufferPtr = nullptr;
+    }
+    if (m_vertBufferPtr) {
+        delete(m_vertBufferPtr);
+        m_vertBufferPtr = nullptr;
+    }
+    if (m_vertArrayPtr) {
+        delete(m_vertArrayPtr);
+        m_vertArrayPtr = nullptr;
+    }
+}
+
+void BladeGrass::initialize() {
     genPoints(m_basicAttrib);
     // 各个 instance
 
     genInstances();
-
-
 
     // 为基本属性生成 vertexbuffer 
     m_vertBufferPtr = new VertexBuffer(m_positions.data(), m_positions.size() * sizeof(m_positions[0]));
@@ -36,21 +59,6 @@ BladeGrass::BladeGrass(const glm::vec3& pos, const float width, const float heig
     m_vertArrayPtr = new VertexArray(m_vertBufferPtr, m_idxBufferPtr);
     checkPointer(m_vertArrayPtr, "BladeGrass VA create failed\n");
     m_vertArrayPtr->AddBuffer(m_offsetVertBufferPtr, true);
-}
-
-BladeGrass::~BladeGrass() {
-    if (m_idxBufferPtr) {
-        delete(m_idxBufferPtr);
-        m_idxBufferPtr = nullptr;
-    }
-    if (m_vertBufferPtr) {
-        delete(m_vertBufferPtr);
-        m_vertBufferPtr = nullptr;
-    }
-    if (m_vertArrayPtr) {
-        delete(m_vertArrayPtr);
-        m_vertArrayPtr = nullptr;
-    }
 }
 
 void BladeGrass::genPoints(GrassAttribute& grassAttrib, uint32_t offset) {
@@ -103,6 +111,8 @@ void BladeGrass::updateSegment(int numOfSeg) {
 
 
 void BladeGrass::genInstances() {
+    // 清空之前的数据
+    m_instancePosOffset.clear();
 
     uint32_t cnt = 0;
     glm::vec3 posOffset;
@@ -115,16 +125,17 @@ void BladeGrass::genInstances() {
             float offset2 = uniformFloatDist(-0.1f, 0.1f);
             posOffset = glm::vec3(x*stepX - m_groundWidth/2 + offset1, 0.0f, y * stepY - m_groundLength/2 + offset2);
 
-            float angle = uniformFloatDist(0.0f, 6.28f);
-            float heightScale = uniformFloatDist(0.2f, 3.1f);
+            float angle = uniformFloatDist(0.0f, 6.28f);                    // 草的随机角度旋转
+            float heightScale = uniformFloatDist(0.5f, 3.1f);               // 随机高度缩放
             float maxHeight = heightScale * m_basicAttrib.height;
 
-            float p3Z = uniformFloatDist(0.2f, 0.45f);
-            float p1Y = uniformFloatDist(0.5f, 1.2f);
-            float p1Z = uniformFloatDist(0.1f * p1Y , 0.2f * p1Y);
+            float p3Z = 0.5;// uniformFloatDist(0.3f, 0.45f);
 
-            float p2Y = uniformFloatDist(1.0f, 1.2f);
-            float p2Z = uniformFloatDist(-0.1f , 0.8f * p3Z);
+            float p1Y = 1.0; //uniformFloatDist(0.5f, 1.2f);
+            float p1Z = uniformFloatDist(-0.01, 0.0f);
+
+            float p2Y = 1;// uniformFloatDist(1.0f, 1.2f);
+            float p2Z = 0.5;// uniformFloatDist(-0.1f, 0.8f * p3Z);
 
             Point p1(0.0f, p1Y * maxHeight, p1Z * maxHeight);
             Point p2(0.0f, p2Y * maxHeight, p2Z * maxHeight);
@@ -156,7 +167,7 @@ void BladeGrass::display(Shader& shader, Camera& cam, GLFWwindow* window) {
 }
 
 void BladeGrass::displayInstances(Shader& shader, Camera& cam, GLFWwindow* window) {
-    setUniform(shader, cam, window);
+    //setUniform(shader, cam, window);
     m_vertArrayPtr->DrawElementsInstanced(shader, getInstancesNum());
 }
 

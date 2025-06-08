@@ -116,12 +116,13 @@ void main() {
     
     heightPercent = instancePos.y / maxHeight;
 
+    // 根据样条曲线生成当前草的曲线
     instancePos = cubicBezier(instancePos, origin, cubicBezierP1, cubicBezierP2, cubicBezierP3);
 
 
 
     // 加一些随机抖动，在没有风情况下的随机抖动
-    float offset = maxHeight * 0.1 * noise(positionOffset.xz + iTime * 0.05);   // 精致情况下的随机抖动幅度
+    float offset = maxHeight * 0.1 * noise(positionOffset.xz + iTime * 0.05);   // 静止情况下的随机抖动幅度
 
     vec4 displaced =  normalize(randDir) * offset * heightPercent;              // 往某个方向随机抖动
 
@@ -131,7 +132,8 @@ void main() {
     // 风吹带来的转向
     vec2 uniformUv = vec2((positionOffset.x + grassTilePosition.x) / grassWidth, (positionOffset.z + grassTilePosition.z) / grassLength);
     float bendStrenngth = pow(heightPercent, 0.5);
-    mat4 windRotateMat = rotationMatrix(normalize(windDir), 3.14 * 0.5 * noise(uniformUv + 0.06*iTime, 16) * bendStrenngth );
+    vec3 windRotateAxis = cross(normalize(windDir), vec3(0.0f, 1.0f, 0.0f));
+    mat4 windRotateMat = rotationMatrix(windRotateAxis, 3.14 * 0.5 * noise(uniformUv + 0.06*iTime, 16) * bendStrenngth );
     vec4 afterWind =  windRotateMat*afterRotate;
 
     // 添加地面高度起伏

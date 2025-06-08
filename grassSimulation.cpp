@@ -1,4 +1,4 @@
-#if 1
+#if 0
 
 #include <iostream>
 
@@ -21,8 +21,8 @@ int getLOD(float distance, int tileWidth) {
 		return 15;
 	}
 	else {
-		int result = 20 - normDistance;
-		return (result < 15) ? result : 15;
+		int result = 30 - normDistance;
+		return (result < 20) ? result : 20;
 	}
 }
 
@@ -82,21 +82,16 @@ int main() {
 		BladeGrass* grass = new BladeGrass(glm::vec3(0.0f), 0.2f, 2.0f, lod, grassTileWidth, grassTileLength);
 		grasses.push_back(grass);
 		
-		
-		
-		//std::cout << distance <<", lod: "<< lod <<", " << offset.x << " " << offset.z << std::endl;
 	}
 	
 	// 草地
 	float groundWidth = N * grassTileWidth / 2;
 	float groundLength = N * grassTileLength / 2;
 	float ground[] = {
-		// positions          // normals           // texture coords
-		 groundWidth,  0.0f, groundLength,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 groundWidth,  0.0f,-groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		-groundWidth,  0.0f,-groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-groundWidth,  0.0f, groundLength,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-
+		-groundWidth, 0.0f, -groundLength, 
+		 groundWidth, 0.0f, -groundLength, 
+		 groundWidth, 0.0f,  groundLength, 
+		-groundWidth, 0.0f,  groundLength, 
 	};
 	unsigned int groundIdx[] = {
 		0, 1, 2,
@@ -105,15 +100,13 @@ int main() {
 
 	VertexBuffer* vbPtr = new VertexBuffer(ground, sizeof(ground));
 	vbPtr->Push<float>(3, false);
-	vbPtr->Push<float>(3, false);
-	vbPtr->Push<float>(2, false);
 
 	IndexBuffer* ibPtr = new IndexBuffer(groundIdx, sizeof(groundIdx) / sizeof(groundIdx[0]));
 
 	VertexArray* vaPtr = new VertexArray(vbPtr, ibPtr);
 
 	// 风的方向
-	glm::vec3 windDir(0.0f, 0.0f, 1.0f);
+	glm::vec3 windDir(0.2f, 0.0f, 1.0f);
 
 	// model、view、projection三件套
 	glm::mat4 model(1.0f);
@@ -140,9 +133,12 @@ int main() {
 
 		// 开启深度测试
 		glEnable(GL_DEPTH_TEST);
-		// 对 shader 进行设置前，都必须要先激活
+		// 绘制地面
 		bgShader->Use();
 		bgShader->setView(camera, window);
+		bgShader->SetUniform1f(groundWidth, "groundWidth");
+		bgShader->SetUniform1f(groundLength, "groundLength");
+		bgShader->SetUniform1f(glfwGetTime(), "iTime");
 		vaPtr->DrawElement(*bgShader);
 		
 		// 绘制草
@@ -163,7 +159,7 @@ int main() {
 			grasses[i]->updateSegment(numOfSeg);
 			grasses[i]->displayInstances(*grassShaderPtr, camera, window);
 		}
-		//grassPtr->displayInstances(*grassShaderPtr, camera, window);
+
 
 
 		glfwSwapBuffers(window);

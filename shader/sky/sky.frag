@@ -85,7 +85,7 @@ vec2 quintic(vec2 p) {
 
 float getPerlin(vec2 uv){
 
-    uv = 3 * uv + iTime;
+    uv = 4 * uv + iTime;
     vec2 gridUv = fract(uv);
     vec2 gridId = floor(uv);
     vec2 bl = gridId + vec2(0.0, 0.0);
@@ -135,9 +135,13 @@ void main() {
     vec3 cloudColor = vec3(1.0);          // °×ÔÆ
      // ²åÖµ
     vec3 color = mix(skyColor, cloudColor, smoothstep(0.5, 0.8, n));
-//    color = vec3(getPerlin(fragCoord*0.5 + 0.5));
-//    color = vec3(noise(fragCoord*0.5 + 0.5 + 0.1*iTime));
 
+
+
+//    color = vec3(getPerlin(fragCoord*0.5 + 0.5));
+//    vec3 color = vec3(getPerlin(fragCoord*0.5 + 0.5));
+
+//    color = vec3(voronoi(uv));
 
 
     OutColor = vec4(color, 1.0);

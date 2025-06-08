@@ -148,6 +148,7 @@
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VertexArray.cpp" />
     <ClCompile Include="src\VertexBuffer.cpp" />
+    <ClCompile Include="test\demoCubicCurve.cpp" />
     <ClCompile Include="test\instanceTest.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,8 @@
   <ItemGroup>
     <None Include="shader\background\bg.frag" />
     <None Include="shader\background\bg.vert" />
+    <None Include="shader\grass.frag" />
+    <None Include="shader\grass.vert" />
     <None Include="shader\sky\sky.frag" />
     <None Include="shader\sky\sky.vert" />
   </ItemGroup>

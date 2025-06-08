@@ -114,11 +114,11 @@ void Camera::updateCameraPosition(){
     glm::vec3 diff = 0.5f * cameraSpeed * m_cameraDirection;
     if (m_keys[GLFW_KEY_W]) {
         m_cameraPos += diff;
-        //m_cameraTarget += diff;
+        m_cameraTarget += diff;
     }
     if (m_keys[GLFW_KEY_S]) {
         m_cameraPos -= diff;
-        //m_cameraTarget -= diff;
+        m_cameraTarget -= diff;
     }
 
     // 摄像机左右移动，x轴方向：先根据上向量和摄像机朝向，计算右向量
@@ -175,10 +175,16 @@ glm::mat4 Camera::getView() {
     return glm::lookAt(m_cameraPos, m_cameraPos + m_cameraDirection, m_cameraUp);
 }
 
-glm::mat4 Camera::getProjection(GLFWwindow* window) {
+glm::mat4 Camera::getProjection(GLFWwindow* window, bool useProj) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    return glm::perspective(glm::radians(m_fov), 1.0f * width / height, 0.1f, 1000.f);
+    if (useProj) {
+
+        return glm::perspective(glm::radians(m_fov), 1.0f * width / height, 0.1f, 1000.f);
+    }
+    else {
+        return glm::mat4(1.0f);
+    }
 }
 
 glm::vec3 Camera::getPosition() const {

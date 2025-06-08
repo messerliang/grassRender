@@ -68,7 +68,7 @@ public:
 	void updateCameraRotation(GLFWwindow* window);
 
 	glm::mat4 getView();
-	glm::mat4 getProjection(GLFWwindow* window);
+	glm::mat4 getProjection(GLFWwindow* window, bool useProj=true);
 	glm::vec3 getPosition() const;
 
 

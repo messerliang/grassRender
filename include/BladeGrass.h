@@ -63,10 +63,31 @@ public:
 	float m_groundWidth = 3.0f;						// 草地的宽
 	float m_groundLength = 3.0f;					// 草地的长
 
+	// 输入参数1： 草地中心位置
+	// 输入参数2：单根草的宽度
+	// 输入参数3：单根草的标准高度
+	// 输入参数4：草的段数
+	// 输入参数5：草地宽度
+	// 输入参数6：草地长度
 	BladeGrass(const glm::vec3& pos, const float width, const float height, int numOfSeg=10, float w=5.0f, float l=5.0f);
+
+	// 输入参数1：单根草的宽度
+	// 输入参数2：单根草的标准高度
+	// 输入参数3：宽度方向草的数量
+	// 输入参数4：长度方向草地数量
+	// 输入参数5：草的段数
+	// 输入参数6：草地宽度
+	// 输入参数7：草地长度
+	BladeGrass(float width, float height, int numWidth, int numLength, int numOfSeg=10, float w=5.0f, float l=5.0f);
+
+
 
 	~BladeGrass();
 
+	// 根据构造函数完成后的参数，进行初始化
+	void initialize();
+	
+	
 	// 根据位置、宽度和高度生成对应的点，为第 offset 个bladegrass按照对应顶点的方式生成对应的顶点，
 	void genPoints(GrassAttribute& grassAttrib, uint32_t offset=0);
 	

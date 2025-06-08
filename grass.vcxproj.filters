@@ -63,6 +63,9 @@
     <ClCompile Include="test\instanceTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="test\demoCubicCurve.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Callback.h">
@@ -110,5 +113,7 @@
     <None Include="shader\background\bg.vert" />
     <None Include="shader\sky\sky.frag" />
     <None Include="shader\sky\sky.vert" />
+    <None Include="shader\grass.frag" />
+    <None Include="shader\grass.vert" />
   </ItemGroup>
 </Project>
