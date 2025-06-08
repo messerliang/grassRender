@@ -15,6 +15,9 @@
 - **颜色渐变**：草叶采用渐变色或按高度混合不同紫色调，模拟草地的层次感。
 
 #  渲染结果 | render result 
+
+![img](./img/pic1.png)
+
 ![img](./img/windBlow.gif)
 
 ![img](./img/grass.gif)
