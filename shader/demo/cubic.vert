@@ -24,7 +24,7 @@ uniform vec3 grassTilePosition;                         // 当前草块的位置
 uniform vec3 cameraPosition;                            // 摄像机的位置
 
 out float heightPercent;
-
+out vec3 OutColor;
 
 vec4 scaleHeight(vec4 pos){
     vec4 result = vec4(pos.x, pos.y * heightScale, pos.z, pos.w);
@@ -202,7 +202,7 @@ void main() {
 
 
     // 加一些随机抖动，在没有风情况下的随机抖动
-    float offset = maxHeight * 0.2 * noise(positionOffset.xz + iTime * 0.08);   // 静止情况下的随机抖动幅度
+    float offset = maxHeight * 0.1 * noise(positionOffset.xz + iTime * 0.08);   // 静止情况下的随机抖动幅度
     
     vec4 displaced =  normalize(randDir) * offset * heightPercent;              // 往某个方向随机抖动
 
@@ -213,14 +213,16 @@ void main() {
     vec2 uniformUv = 0.5 + 0.5 * vec2((positionOffset.x + grassTilePosition.x) / grassWidth, (positionOffset.z + grassTilePosition.z) / grassLength);
     float bendStrenngth = pow(heightPercent, 0.5);
     vec3 windRotateAxis = cross(normalize(windDir), vec3(0.0f, 1.0f, 0.0f));
-    mat4 windRotateMat = rotationMatrix(windRotateAxis, 3.14 * 0.45 * snoise(uniformUv + 0.3*iTime) * bendStrenngth );
+    float windStrength = snoise(uniformUv*4 + 0.3*iTime);
+    mat4 windRotateMat = rotationMatrix(windRotateAxis, 3.14 * 0.45 * windStrength * bendStrenngth );
     
     vec4 afterWind =  windRotateMat * afterRotate;
 
      // 添加地面高度起伏
-    float bump = 10.0f * noise(uniformUv, 4);
-    vec4 bumpV4 = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    
+    float bump = 10.0f * noise(uniformUv, 8);
+    vec4 bumpV4 = vec4(0.0f, bump, 0.0f, 0.0f);
+
+    OutColor = vec3( 1.0f-windStrength* 1);
     gl_Position = projection * view * model * (afterWind  + bumpV4 +  positionOffset  + vec4(grassTilePosition.xyz, 0.0f));
     
 }

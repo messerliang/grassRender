@@ -3,6 +3,7 @@
 
 
 in float heightPercent;
+in vec3 OutColor;
 
 
 float easeInQuad(float t) {
@@ -30,6 +31,6 @@ void main() {
 
     vec3 grass_color = mix(color_bottom, color_top, easeInQuad(heightPercent));
     
-
-    FragColor = vec4(grass_color, 1.0);
+    vec3 renderColor = mix(grass_color, OutColor, 0.85);
+    FragColor = vec4(renderColor, 1.0);
 }

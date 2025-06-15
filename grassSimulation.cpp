@@ -14,15 +14,15 @@
 // 根据距离，生成对应的 lod
 int getLOD(float distance, int tileWidth) {
 	float normDistance = distance / tileWidth;
-	if (normDistance >= 20) {
-		return 1;
+	if (normDistance >= 30) {
+		return 3;
 	}
 	else if (normDistance < 2) {
 		return 15;
 	}
 	else {
-		int result = 30 - normDistance;
-		return (result < 20) ? result : 20;
+		int result = 35 - normDistance;
+		return (result < 15) ? result : 15;
 	}
 }
 
@@ -71,27 +71,30 @@ int main() {
 	BladeGrass* grassPtr = new BladeGrass(glm::vec3(0.0f, 0.0f, 0.0f), 0.2f, 1.5f, 10);
 	std::vector<BladeGrass*> grasses;
 	std::vector<glm::vec3> grassTilePosition;
-	float grassTileWidth = 5.0f, grassTileLength = 5.0f;
+	float grassTileWidth = 10.0f, grassTileLength = 10.0f;
 	int N = 50;
-	for (int i = 0; i < N*N; ++i) {
-		glm::vec3 offset(((i % N) - N / 2) * grassTileWidth, 0.0f, ((i / N) - N / 2) * grassTileLength);
-		float distance = glm::distance(camera.getPosition(), offset);
-		grassTilePosition.emplace_back(offset);
-		int lod = getLOD(distance, grassTileWidth);
-
-		BladeGrass* grass = new BladeGrass(glm::vec3(0.0f), 0.2f, 2.0f, lod, grassTileWidth, grassTileLength);
-		grasses.push_back(grass);
-		
-	}
-	
-	// 草地
 	float groundWidth = N * grassTileWidth / 2;
 	float groundLength = N * grassTileLength / 2;
+	for (int r = 0; r < N; ++r) {
+		for (int c = 0; c < N; ++c) {
+			float offW = c * grassTileWidth - groundWidth + grassTileWidth / 2;
+			float offL = r * grassTileLength - groundLength + grassTileWidth / 2;
+			glm::vec3 offset(offW, 0.0f, offL);
+			float distance = glm::distance(camera.getPosition(), offset);
+			grassTilePosition.emplace_back(offset);
+			int lod = getLOD(distance, grassTileWidth);
+
+
+			BladeGrass* grass = new BladeGrass(0.2f, 2.0f, 25, 25, lod, grassTileWidth, grassTileLength);
+			grasses.push_back(grass);
+		}
+
+	}
 	float ground[] = {
-		-groundWidth, 0.0f, -groundLength, 
-		 groundWidth, 0.0f, -groundLength, 
-		 groundWidth, 0.0f,  groundLength, 
-		-groundWidth, 0.0f,  groundLength, 
+		-groundWidth/2, 0.0f, -groundLength/2.0f, 
+		 groundWidth/2, 0.0f, -groundLength/2.0f, 
+		 groundWidth/2, 0.0f,  groundLength/2.0f, 
+		-groundWidth/2, 0.0f,  groundLength/2.0f, 
 	};
 	unsigned int groundIdx[] = {
 		0, 1, 2,
@@ -136,18 +139,19 @@ int main() {
 		// 绘制地面
 		bgShader->Use();
 		bgShader->setView(camera, window);
-		bgShader->SetUniform1f(groundWidth, "groundWidth");
-		bgShader->SetUniform1f(groundLength, "groundLength");
+		bgShader->SetUniform1f(groundWidth/4, "groundWidth");
+		bgShader->SetUniform1f(groundLength/4, "groundLength");
 		bgShader->SetUniform1f(glfwGetTime(), "iTime");
 		vaPtr->DrawElement(*bgShader);
 		
 		// 绘制草
 		glm::vec3 camPos = camera.getPosition();
 		grassShaderPtr->Use();
+		grassShaderPtr->setView(camera, window);
 		grassShaderPtr->SetUniform1f(glfwGetTime(), "iTime");
 		grassShaderPtr->SetUniformV3(windDir, "windDir");
-		grassShaderPtr->SetUniform1f(grassPtr->m_groundWidth*N, "grassWidth");
-		grassShaderPtr->SetUniform1f(grassPtr->m_groundLength*N, "grassLength");
+		grassShaderPtr->SetUniform1f(grassTileWidth * N, "grassWidth");
+		grassShaderPtr->SetUniform1f(grassTileLength * N, "grassLength");
 		int numOfSeg = 20;
 		for (int i = 0; i < N * N; i++) {
 			glm::vec3 tilePos = grassTilePosition[i];

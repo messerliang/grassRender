@@ -84,8 +84,8 @@ float snoise(vec2 v)
 void main(){
     
     vec2 uv = fragCoords + iTime * 0.4;
-    vec3 color = vec3(snoise(uv), 0.0f, 0.0f);
-    
-	outColor = vec4(color, 1.0f);
+    vec3 color = vec3(snoise(uv));
+    vec3 renderColor = mix(color, vec3(0.05, 0.35, 0.01), 0.9);
+	outColor = vec4(renderColor, 1.0f);
 
 }

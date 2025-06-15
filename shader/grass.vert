@@ -3,14 +3,15 @@
 layout (location = 0) in vec4 position;
 
 layout (location = 1) in vec4 positionOffset;           // 当前实例偏移中心的距离
-layout (location = 2) in float angle;                   // 旋转矩阵，生成不同方向的草
+layout (location = 2) in float angle;                   // 旋转角度，生成不同方向的草
 layout (location = 3) in float heightScale;             // 高度随机因子，在不同实例中生成不同高度的草
 layout (location = 4) in float maxHeight;               // 当前实例的最大高度
 
-layout (location = 5) in vec4 cubicBezierP1;            // 草的弯曲，cubic bezier curve
-layout (location = 6) in vec4 cubicBezierP2;
-layout (location = 7) in vec4 cubicBezierP3;
-layout (location = 8) in vec4 randDir;                  // 
+layout (location = 5) in vec4 cubicBezierP1;            // 控制点1（起点默认是原点）
+layout (location = 6) in vec4 cubicBezierP2;            // 控制点2
+layout (location = 7) in vec4 cubicBezierP3;            // 曲线的终点
+
+layout (location = 8) in vec4 randDir;                  // 无风情况下，当前草随机抖动的方向
 
 uniform mat4 model;
 uniform mat4 view;
@@ -23,7 +24,7 @@ uniform vec3 windDir;                                   // 风的方向
 uniform vec3 grassTilePosition;                         // 当前草块的位置
 
 out float heightPercent;
-
+out vec3 OutColor;
 
 vec4 scaleHeight(vec4 pos){
     vec4 result = vec4(pos.x, pos.y * heightScale, pos.z, pos.w);
@@ -108,6 +109,75 @@ mat4 translation(vec3 dir) {
     );
 }
 
+float linearStep(float edge0, float edge1, float x) {
+    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+    
+}
+
+vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec2 mod289(vec2 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec3 permute(vec3 x) {
+  return mod289(((x*34.0)+10.0)*x);
+}
+
+float snoise(vec2 v)
+  {
+  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                     -0.577350269189626,  // -1.0 + 2.0 * C.x
+                      0.024390243902439); // 1.0 / 41.0
+// First corner
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+
+// Other corners
+  vec2 i1;
+  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+  //i1.y = 1.0 - i1.x;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  // x0 = x0 - 0.0 + 0.0 * C.xx ;
+  // x1 = x0 - i1 + 1.0 * C.xx ;
+  // x2 = x0 - 1.0 + 2.0 * C.xx ;
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+
+// Permutations
+  i = mod289(i); // Avoid truncation effects in permutation
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+		+ i.x + vec3(0.0, i1.x, 1.0 ));
+
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+
+// Gradients: 41 points uniformly over a line, mapped onto a diamond.
+// The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+
+// Normalise gradients implicitly by scaling m
+// Approximation of: m *= inversesqrt( a0*a0 + h*h );
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+// Compute final noise value at P
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+
+
 void main() {
     vec4 origin = vec4(0.0f);
     mat4 rotate = rotationMatrix(vec3(0.0f, 1.0f, 0.0f), angle);
@@ -131,15 +201,17 @@ void main() {
 
     // 风吹带来的转向
     vec2 uniformUv = vec2((positionOffset.x + grassTilePosition.x) / grassWidth, (positionOffset.z + grassTilePosition.z) / grassLength);
-    float bendStrenngth = pow(heightPercent, 0.5);
+    float bendStrenngth = pow(heightPercent,0.7);
     vec3 windRotateAxis = cross(normalize(windDir), vec3(0.0f, 1.0f, 0.0f));
-    mat4 windRotateMat = rotationMatrix(windRotateAxis, 3.14 * 0.5 * noise(uniformUv + 0.06*iTime, 16) * bendStrenngth );
+    float windStrength = snoise(uniformUv*6 + 0.20*iTime);
+    mat4 windRotateMat = rotationMatrix(windRotateAxis, 3.14 * 0.5 * windStrength * bendStrenngth );
     vec4 afterWind =  windRotateMat*afterRotate;
 
     // 添加地面高度起伏
-    float bump = 10.0f * noise(uniformUv, 4);
+    float bump = 10.0f * noise(uniformUv, 16);
     vec4 bumpV4 = vec4(0.0f, bump, 0.0f, 0.0f);
     
+    OutColor = vec3(0.45f,  1.0f-windStrength* 1, 0.63f);
     gl_Position = projection * view * model * (afterWind  +  positionOffset + bumpV4 + vec4(grassTilePosition.xyz, 0.0f));
     
 }

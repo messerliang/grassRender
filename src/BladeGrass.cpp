@@ -129,7 +129,7 @@ void BladeGrass::genInstances() {
             float heightScale = uniformFloatDist(0.5f, 3.1f);               // 随机高度缩放
             float maxHeight = heightScale * m_basicAttrib.height;
 
-            float p3Z = 0.5;// uniformFloatDist(0.3f, 0.45f);
+            float p3Z = 0.5f;//uniformFloatDist(0.3f, 0.45f);
 
             float p1Y = 1.0; //uniformFloatDist(0.5f, 1.2f);
             float p1Z = uniformFloatDist(-0.01, 0.0f);
