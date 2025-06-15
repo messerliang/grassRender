@@ -14,7 +14,7 @@
 
 - **颜色渐变**：草叶采用渐变色或按高度混合不同紫色调，模拟草地的层次感。
 
-#  渲染结果 | render result | ![B站视频](https://www.bilibili.com/video/BV1MMMtzcE2R/?vd_source=0bc24278cd7a0c76a9cea9d12245ddd8)
+#  渲染结果 | render result | [B站视频](https://www.bilibili.com/video/BV1MMMtzcE2R/?vd_source=0bc24278cd7a0c76a9cea9d12245ddd8)
 
 ![img](./img/pic1.png)
 
